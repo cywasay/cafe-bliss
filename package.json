@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "prisma:seed": "node --experimental-modules prisma/seed.mjs"
+    "prisma:seed": "node --experimental-modules prisma/seed.mjs",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",

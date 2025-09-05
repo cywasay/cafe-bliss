@@ -6,8 +6,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function CartPage() {
-  const { cart, getTotalPrice, clearCart } = useCart();
+  const { cart, getTotalPrice, clearCart, checkout, isCheckingOut } = useCart();
   const [isMobile, setIsMobile] = useState(false);
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Shopping Cart - Café Bliss";
+  }, []);
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -281,6 +286,13 @@ export default function CartPage() {
 
                     <div className="space-y-3">
                       <MotionButton
+                        onClick={async () => {
+                          const res = await checkout();
+                          if (res?.id) {
+                            alert(`Order placed! ID: ${res.id}`);
+                          }
+                        }}
+                        disabled={cart.length === 0 || isCheckingOut}
                         className={`w-full py-3 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white rounded-xl font-semibold shadow-lg transition-all relative overflow-hidden group text-sm sm:text-base ${
                           !isMobile ? "hover:shadow-xl" : ""
                         }`}
@@ -300,7 +312,7 @@ export default function CartPage() {
                           }`}
                         ></span>
                         <span className="relative z-10">
-                          Proceed to Checkout
+                          {isCheckingOut ? "Placing order…" : "Proceed to Checkout"}
                         </span>
                       </MotionButton>
 

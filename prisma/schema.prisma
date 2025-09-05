@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Analytics relation
+  analytics Analytics[]
+
+  @@map("users")
+}
+
+model Product {
+  id            Int         @id @default(autoincrement())
+  name          String      @unique
+  price         Float
+  image         String?
+  description   String?
+  roastLevel    String?
+  origin        String?
+  category      String?
+  inStock       Boolean     @default(true)
+  featured      Boolean     @default(false)
+
+  orderItems    OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  total      Float
+  status     String      @default("received")
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  items      OrderItem[]
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  quantity   Int
+  price      Float
+
+  productId  Int
+  orderId    Int
+
+  product    Product  @relation(fields: [productId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id])
+}
+
+// New Analytics Model
+model Analytics {
+  id        Int      @id @default(autoincrement())
+  event     String   // 'page_view', 'product_view', 'add_to_cart', 'order_placed', 'order_completed', 'payment_completed'
+  value     Float?   // order amount, quantity, page views count, etc.
+  metadata  Json?    // additional data like product info, user agent, etc.
+  userId    Int?     // optional user reference
+  createdAt DateTime @default(now())
+  
+  user User? @relation(fields: [userId], references: [id])
+}

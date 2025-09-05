@@ -1,7 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useMemo } from "react";
-import products from "../../data/products";
+import { useEffect, useMemo, useState } from "react";
 import ProductCard from "../../components/ProductCard";
 
 export default function ProductsPage() {
@@ -23,8 +22,38 @@ export default function ProductsPage() {
     { value: "rating", label: "Highest Rated" },
   ];
 
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Coffee Products - Café Bliss";
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch("/api/products");
+        if (!res.ok) throw new Error("Failed to load products");
+        const data = await res.json();
+        setProducts(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setError(e.message || "Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   // Get unique values for filter options
   const filterOptions = useMemo(() => {
+    if (!products.length) {
+      return { roastLevels: [], origins: [], categories: [], maxPrice: 100 };
+    }
     const roastLevels = [
       ...new Set(products.map((p) => p.roastLevel).filter(Boolean)),
     ];
@@ -35,7 +64,7 @@ export default function ProductsPage() {
     const maxPrice = Math.max(...products.map((p) => p.price));
 
     return { roastLevels, origins, categories, maxPrice };
-  }, []);
+  }, [products]);
 
   // Filter products
   const filteredProducts = useMemo(() => {
@@ -81,7 +110,7 @@ export default function ProductsPage() {
     });
 
     return filtered;
-  }, [filters]);
+  }, [filters, products]);
 
   const handleSortChange = (value) => {
     setSortBy(value);
@@ -205,6 +234,12 @@ export default function ProductsPage() {
               Discover our premium collection of carefully sourced and expertly
               roasted coffee beans from around the world
             </p>
+            {loading && (
+              <div className="mt-4 text-sm text-gray-500">Loading products…</div>
+            )}
+            {error && (
+              <div className="mt-4 text-sm text-red-600">{error}</div>
+            )}
             <motion.div
               className="w-24 h-1 bg-gradient-to-r from-amber-700 to-pink-500 mx-auto mt-6 rounded-full"
               initial={{ width: 0 }}
